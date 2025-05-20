@@ -1,106 +1,72 @@
+// Самовызывающаяся функция для изоляции кода
 (function() {
-	// Функция инициализации капчи (теперь её нужно вызывать вручную)
-	function initCaptcha() {
-			const SERVER_URL = 'https://api.mydomain.com/captcha';
+	// Глобальная функция для вызова капчи
+	window.showCaptcha = function(callback) {
+			// Проверка на повторную инициализацию
+			if (document.getElementById('captcha-modal')) return;
 			
-			// Создаем элементы для модального окна
-			const captchaModal = document.createElement('div');
-			captchaModal.style.position = 'fixed';
-			captchaModal.style.top = '0';
-			captchaModal.style.left = '0';
-			captchaModal.style.width = '100%';
-			captchaModal.style.height = '100%';
-			captchaModal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-			captchaModal.style.display = 'flex';
-			captchaModal.style.justifyContent = 'center';
-			captchaModal.style.alignItems = 'center';
-			captchaModal.style.zIndex = '9999';
-			
-			// Контейнер для капчи
-			const captchaContainer = document.createElement('div');
-			captchaContainer.style.backgroundColor = '#fff';
-			captchaContainer.style.padding = '20px';
-			captchaContainer.style.borderRadius = '8px';
-			captchaContainer.style.maxWidth = '400px';
-			captchaContainer.style.width = '100%';
-			
-			// Заголовок капчи
-			const captchaTitle = document.createElement('h2');
-			captchaTitle.textContent = 'Подтвердите, что вы не робот';
-			captchaTitle.style.marginTop = '0';
-			captchaTitle.style.textAlign = 'center';
-			
-			// Содержимое капчи
-			const captchaContent = document.createElement('div');
-			captchaContent.innerHTML = `
-					<div style="margin: 20px 0;">
-							<p>Пожалуйста, решите капчу:</p>
-							<div style="background: #f5f5f5; padding: 15px; text-align: center;">
-									Капча будет здесь
-							</div>
-					</div>
+			// Создаем модальное окно
+			const modal = document.createElement('div');
+			modal.id = 'captcha-modal';
+			modal.style = `
+					position: fixed; top: 0; left: 0; 
+					width: 100%; height: 100%; 
+					background: rgba(0,0,0,0.7); 
+					display: flex; justify-content: center; 
+					align-items: center; z-index: 9999;
 			`;
 			
-			// Кнопка подтверждения
-			const verifyButton = document.createElement('button');
-			verifyButton.textContent = 'Подтвердить';
-			verifyButton.style.display = 'block';
-			verifyButton.style.margin = '20px auto 0';
-			verifyButton.style.padding = '10px 20px';
-			verifyButton.style.backgroundColor = '#4CAF50';
-			verifyButton.style.color = 'white';
-			verifyButton.style.border = 'none';
-			verifyButton.style.borderRadius = '4px';
-			verifyButton.style.cursor = 'pointer';
+			// Контент капчи
+			modal.innerHTML = `
+			<div style="
+					background: white; padding: 20px; 
+					border-radius: 8px; max-width: 400px; 
+					width: 100%; text-align: center;
+			">
+					<h2 style="margin-top: 0;">Подтвердите, что вы не робот</h2>
+					<div style="margin: 20px 0;">
+							<div style="
+									background: #f5f5f5; padding: 15px; 
+									margin-bottom: 15px;
+							">
+									Введите текст: <input type="text" id="captcha-input" style="padding: 5px;">
+							</div>
+							<button id="captcha-submit" style="
+									padding: 10px 20px; background: #4CAF50; 
+									color: white; border: none; border-radius: 4px; 
+									cursor: pointer;
+							">
+									Подтвердить
+							</button>
+					</div>
+			</div>
+			`;
 			
-			// Собираем структуру
-			captchaContainer.appendChild(captchaTitle);
-			captchaContainer.appendChild(captchaContent);
-			captchaContainer.appendChild(verifyButton);
-			captchaModal.appendChild(captchaContainer);
-			document.body.appendChild(captchaModal);
+			document.body.appendChild(modal);
 			
 			// Генерация ключей
-			function generateKeyPair() {
-					return {
-							publicKey: 'public_key_' + Math.random().toString(36).substr(2, 9),
-							privateKey: 'private_key_' + Math.random().toString(36).substr(2, 9)
-					};
-			}
+			const publicKey = 'pub_' + Math.random().toString(36).substr(2, 10);
+			const privateKey = 'priv_' + Math.random().toString(36).substr(2, 16);
 			
-			const keyPair = generateKeyPair();
+			console.log('Отправка публичного ключа:', publicKey);
 			
-			// Отправка публичного ключа
-			console.log('Отправка публичного ключа:', keyPair.publicKey);
-			
-			// Обработчик кнопки подтверждения
-			verifyButton.addEventListener('click', function() {
-					console.log('Капча пройдена, приватный ключ:', keyPair.privateKey);
-					
-					// Генерируем событие о успешном прохождении капчи
-					const event = new CustomEvent('captchaVerified', {
-							detail: {
-									privateKey: keyPair.privateKey
-							}
-					});
-					window.dispatchEvent(event);
-					
-					// Закрываем модальное окно
-					document.body.removeChild(captchaModal);
-			});
-			
-			// Возвращаем функцию для закрытия капчи (на случай, если нужно закрыть программно)
-			return {
-					close: function() {
-							if (document.body.contains(captchaModal)) {
-									document.body.removeChild(captchaModal);
-							}
+			// Обработка подтверждения
+			document.getElementById('captcha-submit').addEventListener('click', function() {
+					const input = document.getElementById('captcha-input').value.trim();
+					if (!input) {
+							alert('Пожалуйста, введите текст!');
+							return;
 					}
-			};
-	}
-	
-	// Делаем функцию initCaptcha доступной извне
-	window.CaptchaWidget = {
-			init: initCaptcha
+					
+					// Закрываем модалку
+					document.body.removeChild(modal);
+					
+					// Вызываем callback с приватным ключом
+					if (typeof callback === 'function') {
+							callback(privateKey);
+					}
+			});
 	};
+	
+	console.log('Captcha Widget готов к использованию');
 })();
