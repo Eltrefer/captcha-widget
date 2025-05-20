@@ -69,4 +69,7 @@
 	};
 	
 	console.log('Captcha Widget готов к использованию');
+
+	window.dispatchEvent(new Event('captchaReady'));
+
 })();
