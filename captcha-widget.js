@@ -1,4 +1,5 @@
 (function() {
+  console.log('Виджет начал загружаться');
   // Создаем модальное окно капчи
   function createCaptchaModal(callback) {
     if (document.getElementById('captcha-modal')) return;
